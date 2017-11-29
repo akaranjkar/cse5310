@@ -1,0 +1,11 @@
+# twSentiment
+twSentiment/.idea
+twSentiment/*.iml
+twSentiment/target
+twSentiment/src/main/resources/SentiWordNet_3.0.0_20130122.txt
+
+# twCollector
+twCollector/.idea
+twCollector/*.iml
+twCollector/target
+twCollector/test.csv
