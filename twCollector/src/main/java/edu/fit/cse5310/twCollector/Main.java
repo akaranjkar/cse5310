@@ -20,11 +20,11 @@ public class Main {
     private static final String CONSUMER_SECRET = System.getenv("TW_CONSUMER_SECRET");
 
     // 100 tweets per query is the maximum allowed in the API
-    private static final int TWEETS_PER_QUERY = 100;
+    private static int TWEETS_PER_QUERY = 10;
 
     // Maximum queries allowed. Don't set above 450
     // Can retrieve upto MAX_QUERIES*TWEETS_PER_QUERY tweets
-    private static final int MAX_QUERIES = 450;
+    private static int MAX_QUERIES = 10;
 
     private static final String NEW_LINE_SEPARATOR = "\n";
     private static final String COMMA_DELIMITER = ",";
@@ -234,10 +234,19 @@ public class Main {
 
     public static void main(String[] args) throws IOException {
         String[] hashtags = {"#climatechange", "#globalwarming", "#climate", "#earth", "#science", "#change"};
-        String outputCSVFileName = args[0];
-        for (String hashtag : hashtags) {
-            fetchData(hashtag, outputCSVFileName);
+        if (args.length < 1) {
+            System.out.println("Usage: jar <csv_file> [TWEETS_PER_QUERY (max 100)] [MAX_QUERIES (max 450)]");
+        } else {
+            String outputCSVFileName = args[0];
+            if (args.length == 2) {
+                TWEETS_PER_QUERY = Integer.parseInt(args[1]);
+            }
+            if (args.length == 3) {
+                MAX_QUERIES = Integer.parseInt(args[2]);
+            }
+            for (String hashtag : hashtags) {
+                fetchData(hashtag, outputCSVFileName);
+            }
         }
-
     }
 }
