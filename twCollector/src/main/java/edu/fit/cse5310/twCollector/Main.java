@@ -20,11 +20,16 @@ public class Main {
     private static final String CONSUMER_SECRET = System.getenv("TW_CONSUMER_SECRET");
 
     // 100 tweets per query is the maximum allowed in the API
-    private static final int TWEETS_PER_QUERY = 10;
+    private static final int TWEETS_PER_QUERY = 100;
 
     // Maximum queries allowed. Don't set above 450
     // Can retrieve upto MAX_QUERIES*TWEETS_PER_QUERY tweets
-    private static final int MAX_QUERIES = 10;
+    private static final int MAX_QUERIES = 450;
+
+    private static final String NEW_LINE_SEPARATOR = "\n";
+    private static final String COMMA_DELIMITER = ",";
+
+    private static final boolean DEBUG = true;
 
     // Cleanup text
     public static String cleanText(String text) {
@@ -80,7 +85,6 @@ public class Main {
         //FileWriter filewriter = null;
 
         int totalTweets = 0;
-        int i = 0;
 
         //	This variable is the key to our retrieving multiple blocks of tweets.  In each batch of tweets we retrieve,
         //	we use this variable to remember the LOWEST tweet ID.  Tweet IDs are (java) longs, and they are roughly
@@ -91,8 +95,7 @@ public class Main {
         long maxID = -1;
 
         Twitter twitter = getTwitter();
-        String NEW_LINE_SEPARATOR = "\n";
-        String COMMA_DELIMITER = ",";
+
         //String FILE_HEADER = "TimeStamp, UserId, Tweets, Retweets, HashTags";
 
 
@@ -141,34 +144,15 @@ public class Main {
                         maxID = s.getId();
                     }
 
-                    String hash = new String();
-                    if (s.getHashtagEntities().length < 1) {
-                        hash = hashTagInput.replace("#","");
-                    } else {
-                        for (HashtagEntity h : s.getHashtagEntities()) {
-                            hash += h.getText() + " ";
-                        }
-                    }
-                    hash.trim();
+                    String hashTagString = buildHashtagString(s, hashTagInput);
 
-                    System.out.printf("At %s, @%-20s said:  %s, Retweeted: %s, HashTags: %s\n",
-                            s.getCreatedAt().toString(),
-                            s.getUser().getScreenName(),
-                            cleanText(s.getText()),
-                            s.getRetweetCount(),
-                            hash);
+                    // Print tweet to stdout
+                    if (DEBUG) {
+                        printTweet(s, hashTagString);
+                    }
 
                     // Write to CSV
-                    filewriter.append(s.getCreatedAt().toString());
-                    filewriter.append(COMMA_DELIMITER);
-                    filewriter.append(s.getUser().getScreenName());
-                    filewriter.append(COMMA_DELIMITER);
-                    filewriter.append(cleanText(s.getText()));
-                    filewriter.append(COMMA_DELIMITER);
-                    filewriter.append(String.valueOf(s.getRetweetCount()));
-                    filewriter.append(COMMA_DELIMITER);
-                    filewriter.append(cleanText(hash));
-                    filewriter.append(NEW_LINE_SEPARATOR);
+                    writeTweetToFile(filewriter, s, hashTagString);
                 }
 
                 // Update rate limit
@@ -185,13 +169,71 @@ public class Main {
         filewriter.close();
     }
 
+    private static void printTweet(Status s, String hashTagString) {
+        if (s.isRetweet()) {
+            System.out.println(s.getCreatedAt().toString() + "," + s.getUser().getScreenName() + "," +
+                    cleanText(s.getText()) + "," + "0" + "," + "0" + "," +
+                    cleanText(hashTagString) + "," + "0");
+            printTweet(s.getRetweetedStatus(), hashTagString);
+        }
+        else {
+            System.out.println(s.getCreatedAt().toString() + "," + s.getUser().getScreenName() + "," +
+                    cleanText(s.getText()) + "," + s.getRetweetCount() + "," + s.getFavoriteCount() + "," +
+                    cleanText(hashTagString) + "," + "1");
+        }
+    }
+
+    private static String buildHashtagString(Status s, String hashTagInput) {
+        // Build hashtag string
+        String hashTagString = new String();
+        if (s.getHashtagEntities().length < 1) {
+            hashTagString = hashTagInput.replace("#","");
+        } else {
+            for (HashtagEntity h : s.getHashtagEntities()) {
+                hashTagString += h.getText() + " ";
+            }
+        }
+        return hashTagString.trim();
+    }
+
+    private static void writeTweetToFile (FileWriter filewriter, Status s, String hashTagString) throws IOException {
+        // timestamp, screenName, tweetText, retweetCount, favoriteCount, hashtags, isOriginalContent
+        if (s.isRetweet()) {
+            filewriter.append(s.getCreatedAt().toString()); // timestamp
+            filewriter.append(COMMA_DELIMITER);
+            filewriter.append(s.getUser().getScreenName()); // screenName
+            filewriter.append(COMMA_DELIMITER);
+            filewriter.append(cleanText(s.getText())); // tweetText
+            filewriter.append(COMMA_DELIMITER);
+            filewriter.append('0'); // retweetCount
+            filewriter.append(COMMA_DELIMITER);
+            filewriter.append('0'); // favoriteCount
+            filewriter.append(COMMA_DELIMITER);
+            filewriter.append(cleanText(hashTagString)); // hashtags
+            filewriter.append(COMMA_DELIMITER);
+            filewriter.append('0');
+            filewriter.append(NEW_LINE_SEPARATOR);
+            writeTweetToFile(filewriter, s.getRetweetedStatus(), hashTagString); // write original tweet also
+        } else {
+            filewriter.append(s.getCreatedAt().toString()); // timestamp
+            filewriter.append(COMMA_DELIMITER);
+            filewriter.append(s.getUser().getScreenName()); // screenName
+            filewriter.append(COMMA_DELIMITER);
+            filewriter.append(cleanText(s.getText())); // tweetText
+            filewriter.append(COMMA_DELIMITER);
+            filewriter.append(String.valueOf(s.getRetweetCount())); // retweetCount
+            filewriter.append(COMMA_DELIMITER);
+            filewriter.append(String.valueOf(s.getFavoriteCount())); // favoriteCount
+            filewriter.append(COMMA_DELIMITER);
+            filewriter.append(cleanText(hashTagString)); // hashtags
+            filewriter.append(COMMA_DELIMITER);
+            filewriter.append('1');
+            filewriter.append(NEW_LINE_SEPARATOR);
+        }
+    }
+
     public static void main(String[] args) throws IOException {
-        String[] hashtags = {"#climatechange",
-                "#globalwarming",
-                "#climate",
-                "#earth",
-                "#science",
-                "#change"};
+        String[] hashtags = {"#climatechange", "#globalwarming", "#climate", "#earth", "#science", "#change"};
         String outputCSVFileName = args[0];
         for (String hashtag : hashtags) {
             fetchData(hashtag, outputCSVFileName);
