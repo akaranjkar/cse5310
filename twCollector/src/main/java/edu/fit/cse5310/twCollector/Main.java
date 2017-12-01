@@ -96,7 +96,7 @@ public class Main {
 
         Twitter twitter = getTwitter();
 
-        //String FILE_HEADER = "TimeStamp, UserId, Tweets, Retweets, HashTags";
+        //String FILE_HEADER = "timestamp, screenName, tweetText, retweetCount, favoriteCount, hashtags, isOriginalContent";
 
 
         FileWriter filewriter = new FileWriter(outputCSVFileName, true);
@@ -175,8 +175,7 @@ public class Main {
                     cleanText(s.getText()) + "," + "0" + "," + "0" + "," +
                     cleanText(hashTagString) + "," + "0");
             printTweet(s.getRetweetedStatus(), hashTagString);
-        }
-        else {
+        } else {
             System.out.println(s.getCreatedAt().toString() + "," + s.getUser().getScreenName() + "," +
                     cleanText(s.getText()) + "," + s.getRetweetCount() + "," + s.getFavoriteCount() + "," +
                     cleanText(hashTagString) + "," + "1");
@@ -187,7 +186,7 @@ public class Main {
         // Build hashtag string
         String hashTagString = new String();
         if (s.getHashtagEntities().length < 1) {
-            hashTagString = hashTagInput.replace("#","");
+            hashTagString = hashTagInput.replace("#", "");
         } else {
             for (HashtagEntity h : s.getHashtagEntities()) {
                 hashTagString += h.getText() + " ";
@@ -196,7 +195,7 @@ public class Main {
         return hashTagString.trim();
     }
 
-    private static void writeTweetToFile (FileWriter filewriter, Status s, String hashTagString) throws IOException {
+    private static void writeTweetToFile(FileWriter filewriter, Status s, String hashTagString) throws IOException {
         // timestamp, screenName, tweetText, retweetCount, favoriteCount, hashtags, isOriginalContent
         if (s.isRetweet()) {
             filewriter.append(s.getCreatedAt().toString()); // timestamp
