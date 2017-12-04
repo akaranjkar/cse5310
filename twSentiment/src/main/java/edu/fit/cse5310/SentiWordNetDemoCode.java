@@ -1,3 +1,6 @@
+// Taken from https://github.com/cleuton/bigdatasample
+package edu.fit.cse5310;
+
 //    Copyright 2013 Petter Törnberg
 //
 //    This demo code has been kindly provided by Petter Törnberg <pettert@chalmers.se>
@@ -15,36 +18,49 @@
 //
 //    You should have received a copy of the GNU General Public License
 //    along with this program.  If not, see <http://www.gnu.org/licenses/>.
-
-package edu.fit.cse5310;
+/*
+ * Version By Cleuton Sampaio (c) 2015, based on Törnberg's work.
+ * //    This program is free software: you can redistribute it and/or modify
+//    it under the terms of the GNU General Public License as published by
+//    the Free Software Foundation, either version 3 of the License, or
+//    (at your option) any later version.
+//
+//    This program is distributed in the hope that it will be useful,
+//    but WITHOUT ANY WARRANTY; without even the implied warranty of
+//    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+//    GNU General Public License for more details.
+//
+//    You should have received a copy of the GNU General Public License
+//    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ *
+ * 	  Part of this program was based on a StackOverflow post:
+ * http://stackoverflow.com/questions/15653091/how-to-use-sentiwordnet
+ */
 
 import java.io.BufferedReader;
-import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 public class SentiWordNetDemoCode {
+
     public enum SENTIMENT {NEUTRAL,VERY_NEGATIVE, NEGATIVE, POSITIVE, VERY_POSITIVE};
     private Map<String, Double> dictionary;
 
-    public SentiWordNetDemoCode(String swnFileName) throws IOException {
-        String swnFilePath = getClass().getClassLoader().getResource(swnFileName).getPath();
-
+    public SentiWordNetDemoCode(List<String> csv) throws IOException {
         // This is our main dictionary representation
         dictionary = new HashMap<String, Double>();
 
         // From String to list of doubles.
         HashMap<String, HashMap<Integer, Double>> tempDictionary = new HashMap<String, HashMap<Integer, Double>>();
 
-        BufferedReader csv = null;
         try {
-            csv = new BufferedReader(new FileReader(swnFilePath));
             int lineNumber = 0;
 
-            String line;
-            while ((line = csv.readLine()) != null) {
+            for (String line : csv) {
                 lineNumber++;
 
                 // If it's a comment, skip this line.
@@ -96,6 +112,7 @@ public class SentiWordNetDemoCode {
                 }
             }
 
+
             // Go through all the terms.
             for (Map.Entry<String, HashMap<Integer, Double>> entry : tempDictionary
                     .entrySet()) {
@@ -119,16 +136,8 @@ public class SentiWordNetDemoCode {
             }
         } catch (Exception e) {
             e.printStackTrace();
-        } finally {
-            if (csv != null) {
-                csv.close();
-            }
         }
     }
-
-//    public double extract(String word, String pos) {
-//        return dictionary.get(word + "#" + pos);
-//    }
 
     public Double extract(String word)
     {
@@ -178,11 +187,19 @@ public class SentiWordNetDemoCode {
         return sentiment;
     }
 
-    public static void main(String [] args) throws IOException {
-        String swnFile = "SentiWordNet_3.0.0_20130122.txt";
-        SentiWordNetDemoCode sentiwordnet = new SentiWordNetDemoCode(swnFile);
-        String sentence = "This is a great and a fantastic sentence!";
+    public static void main(String[] args) throws IOException {
+        String swnFile = args[0];
+        List<String> linhas = new ArrayList<>();
+        BufferedReader csv = new BufferedReader(new FileReader(swnFile));
+        String line;
+        line=csv.readLine();
+        while (line != null){
+            linhas.add(line);
+            line=csv.readLine();
+        }
 
-        System.out.println(sentence+"\t"+sentiwordnet.analyze(sentence));
+        SentiWordNetDemoCode swn = new SentiWordNetDemoCode(linhas);
+        String sentence = "This is a very positive sentence";
+        System.out.println(sentence + "\t" + swn.analyze(sentence));
     }
 }

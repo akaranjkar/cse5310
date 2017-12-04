@@ -12,6 +12,7 @@ public class ActiveUsers {
         private Text user = new Text();
         private IntWritable one = new IntWritable(1);
         public void map(Object key, Text line, Context context) throws IOException, InterruptedException {
+            // timestamp, screenName, tweetText, retweetCount, favoriteCount, hashtags, isOriginalContent
             String[] fields = MiscUtils.fieldsFromLine(line.toString());
             user.set(fields[1]);
             context.write(user, one);

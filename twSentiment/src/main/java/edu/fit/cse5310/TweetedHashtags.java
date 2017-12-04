@@ -13,8 +13,9 @@ public class TweetedHashtags {
         private Text hashtag = new Text();
         private IntWritable one = new IntWritable(1);
         public void map(Object key, Text line, Context context) throws IOException, InterruptedException {
+            // timestamp, screenName, tweetText, retweetCount, favoriteCount, hashtags, isOriginalContent
             String[] fields = MiscUtils.fieldsFromLine(line.toString());
-            StringTokenizer itr = new StringTokenizer(fields[4]);
+            StringTokenizer itr = new StringTokenizer(fields[5]);
             while (itr.hasMoreTokens()) {
                 hashtag.set(itr.nextToken());
                 context.write(hashtag,one);
