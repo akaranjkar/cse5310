@@ -12,11 +12,14 @@ public class RetweetedUsers {
         private Text user = new Text();
         private IntWritable retweets = new IntWritable();
         public void map(Object key, Text line, Context context) throws IOException, InterruptedException {
-            // timestamp, screenName, tweetText, retweetCount, favoriteCount, hashtags, isOriginalContent
+            // date, username, text, retweets, favorites, hashtags, mentions, id
             String[] fields = MiscUtils.fieldsFromLine(line.toString());
-            user.set(fields[1]);
-            retweets.set(Integer.parseInt(fields[3]));
-            context.write(user,retweets);
+            if (!fields[1].equals("") && !fields[3].equals("")
+                    && !fields[1].equals("username") && !fields[3].equals("retweets")) {
+                user.set(fields[1]);
+                retweets.set(Integer.parseInt(fields[3]));
+                context.write(user, retweets);
+            }
         }
     }
 

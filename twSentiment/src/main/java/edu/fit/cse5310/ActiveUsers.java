@@ -12,10 +12,12 @@ public class ActiveUsers {
         private Text user = new Text();
         private IntWritable one = new IntWritable(1);
         public void map(Object key, Text line, Context context) throws IOException, InterruptedException {
-            // timestamp, screenName, tweetText, retweetCount, favoriteCount, hashtags, isOriginalContent
+            // date, username, text, retweets, favorites, hashtags, mentions, id
             String[] fields = MiscUtils.fieldsFromLine(line.toString());
-            user.set(fields[1]);
-            context.write(user, one);
+            if (!fields[1].equals("") && !fields[1].equals("username")) {
+                user.set(fields[1]);
+                context.write(user, one);
+            }
         }
     }
 

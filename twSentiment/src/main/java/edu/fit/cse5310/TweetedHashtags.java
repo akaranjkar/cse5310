@@ -13,12 +13,15 @@ public class TweetedHashtags {
         private Text hashtag = new Text();
         private IntWritable one = new IntWritable(1);
         public void map(Object key, Text line, Context context) throws IOException, InterruptedException {
-            // timestamp, screenName, tweetText, retweetCount, favoriteCount, hashtags, isOriginalContent
+            // date, username, text, retweets, favorites, hashtags, mentions, id
             String[] fields = MiscUtils.fieldsFromLine(line.toString());
-            StringTokenizer itr = new StringTokenizer(fields[5]);
-            while (itr.hasMoreTokens()) {
-                hashtag.set(itr.nextToken());
-                context.write(hashtag,one);
+            if (!fields[5].equals("") && !fields[5].equals("hashtags")) {
+                String hashtags = fields[5].replace("#","");
+                StringTokenizer itr = new StringTokenizer(hashtags);
+                while (itr.hasMoreTokens()) {
+                    hashtag.set(itr.nextToken());
+                    context.write(hashtag, one);
+                }
             }
         }
     }

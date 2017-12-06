@@ -25,14 +25,16 @@ public class Sentiments {
         private SentiWordNetDemoCode sdc;
 
         public void map(Object key, Text value, Context context) throws IOException, InterruptedException {
-            // timestamp, screenName, tweetText, retweetCount, favoriteCount, hashtags, isOriginalContent
+            // date, username, text, retweets, favorites, hashtags, mentions, id
             if (this.linhas == null) {
                 getSentiFile(context);
             }
-            String tweet = MiscUtils.fieldsFromLine(key.toString())[2];
-            String senti = sdc.analyze(tweet).toString();
-            word.set(senti);
-            context.write(word, one);
+            String tweet = MiscUtils.fieldsFromLine(value.toString())[2];
+            if (!tweet.equals("") && !tweet.equals("text")) {
+                String senti = sdc.analyze(tweet).toString();
+                word.set(senti);
+                context.write(word, one);
+            }
         }
 
         private void getSentiFile(Context context) throws IOException {
