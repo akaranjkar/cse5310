@@ -4,6 +4,7 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.IntWritable;
+import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.io.NullWritable;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.Job;
@@ -20,8 +21,11 @@ public class Driver {
     private static final String deduplicationOutput = "/twSentiment/output/deduplication";
     private static final String activeUsersOutput = "/twSentiment/output/activeUsers";
     private static final String retweetedUsersOutput = "/twSentiment/output/retweetedUsers";
+    private static final String favoritedUsersOutput = "/twSentiment/output/favoritedUsers";
     private static final String tweetedHashtagsOutput = "/twSentiment/output/tweetedHashtags";
     private static final String sentimentsOutput = "/twSentiment/output/sentiments";
+    private static final String retweetedSentimentsOutput = "/twSentiment/output/retweetedSentiments";
+    private static final String favoritedSentimentsOutput = "/twSentiment/output/favoritedSentiments";
 
     public static void main(String[] args) {
         if (args.length == 2) {
@@ -33,8 +37,11 @@ public class Driver {
             Path dataPath = inputFilePath;
             runActiveUsersJob(dataPath);
             runRetweetedUsersJob(dataPath);
+            runFavoritedUsersJob(dataPath);
             runTweetedHashtagsJob(dataPath);
             runSentimentsJob(dataPath);
+            runRetweetedSentimentsJob(dataPath);
+            runFavoritedSentimentsJob(dataPath);
         }
     }
 
@@ -110,6 +117,30 @@ public class Driver {
         }
     }
 
+    private static void runFavoritedUsersJob(Path inputFilePath) {
+        try {
+            Job job = Job.getInstance(conf, "FavoritedUsers");
+            job.setJarByClass(FavoritedUsers.class);
+            job.setMapperClass(FavoritedUsers.UserMapper.class);
+            job.setCombinerClass(FavoritedUsers.IntSumReducer.class);
+            job.setReducerClass(FavoritedUsers.IntSumReducer.class);
+            job.setMapOutputKeyClass(Text.class);
+            job.setMapOutputValueClass(IntWritable.class);
+            job.setOutputKeyClass(Text.class);
+            job.setOutputValueClass(IntWritable.class);
+            FileInputFormat.addInputPath(job, inputFilePath);
+            FileSystem.get(conf).delete(new Path(favoritedUsersOutput), true);
+            FileOutputFormat.setOutputPath(job, new Path(favoritedUsersOutput));
+            job.waitForCompletion(true);
+        } catch (IOException e) {
+            e.printStackTrace();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        } catch (ClassNotFoundException e) {
+            e.printStackTrace();
+        }
+    }
+
     private static void runTweetedHashtagsJob(Path inputFilePath) {
         try {
             Job job = Job.getInstance(conf, "TweetedHashtags");
@@ -149,6 +180,56 @@ public class Driver {
             FileInputFormat.addInputPath(job, inputFilePath);
             FileSystem.get(conf).delete(new Path(sentimentsOutput), true);
             FileOutputFormat.setOutputPath(job, new Path(sentimentsOutput));
+            job.waitForCompletion(true);
+        } catch (IOException e) {
+            e.printStackTrace();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        } catch (ClassNotFoundException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private static void runRetweetedSentimentsJob(Path inputFilePath) {
+        try {
+            conf.set("sentwordnetfile", swnFile);
+            Job job = Job.getInstance(conf, "RetweetedSentiments");
+            job.setJarByClass(RetweetedSentiments.class);
+            job.setMapperClass(RetweetedSentiments.SentimentMapper.class);
+            job.setCombinerClass(RetweetedSentiments.IntSumReducer.class);
+            job.setReducerClass(RetweetedSentiments.IntSumReducer.class);
+            job.setMapOutputKeyClass(Text.class);
+            job.setMapOutputValueClass(LongWritable.class);
+            job.setOutputKeyClass(Text.class);
+            job.setOutputValueClass(LongWritable.class);
+            FileInputFormat.addInputPath(job, inputFilePath);
+            FileSystem.get(conf).delete(new Path(retweetedSentimentsOutput), true);
+            FileOutputFormat.setOutputPath(job, new Path(retweetedSentimentsOutput));
+            job.waitForCompletion(true);
+        } catch (IOException e) {
+            e.printStackTrace();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        } catch (ClassNotFoundException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private static void runFavoritedSentimentsJob(Path inputFilePath) {
+        try {
+            conf.set("sentwordnetfile", swnFile);
+            Job job = Job.getInstance(conf, "FavoritedSentiments");
+            job.setJarByClass(FavoritedSentiments.class);
+            job.setMapperClass(FavoritedSentiments.SentimentMapper.class);
+            job.setCombinerClass(FavoritedSentiments.IntSumReducer.class);
+            job.setReducerClass(FavoritedSentiments.IntSumReducer.class);
+            job.setMapOutputKeyClass(Text.class);
+            job.setMapOutputValueClass(LongWritable.class);
+            job.setOutputKeyClass(Text.class);
+            job.setOutputValueClass(LongWritable.class);
+            FileInputFormat.addInputPath(job, inputFilePath);
+            FileSystem.get(conf).delete(new Path(favoritedSentimentsOutput), true);
+            FileOutputFormat.setOutputPath(job, new Path(favoritedSentimentsOutput));
             job.waitForCompletion(true);
         } catch (IOException e) {
             e.printStackTrace();
