@@ -32,9 +32,10 @@ public class Driver {
             swnFile = args[0];
             inputFilePath = new Path(args[1]);
             conf.addResource(new Path(coreSitePath));
-//            runDeduplicationJob(inputFilePath);
-//            Path dataPath = new Path(deduplicationOutput);
-            Path dataPath = inputFilePath;
+
+            runDeduplicationJob(inputFilePath);
+            Path dataPath = new Path(deduplicationOutput);
+
             runActiveUsersJob(dataPath);
             runRetweetedUsersJob(dataPath);
             runFavoritedUsersJob(dataPath);
